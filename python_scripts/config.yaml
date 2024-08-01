@@ -1,0 +1,92 @@
+#
+# Configuration files for HTML plot scripts
+#
+# AndBro @ 2021
+# ________________
+
+
+
+## __________________________________________
+WROMY: 
+    channel: None
+    stations: [1,4,5,6,7,8,9]
+
+    timePeriod: 14 # in days
+    resample: 20
+
+    pathToData: '/import/freenas-ffb-01-data/romy_archive/'
+    pathToArchive: '/bay200/gif_online/FURT/WETTER/'
+    
+    outpath: '/import/freenas-ffb-01-data/HTML_Monitor/figures/'
+    outname: 'html_wromy_plots'
+    
+    colors: 
+        WS1: 'darkgreen' 
+        WS4: 'purple'
+        WS5: 'darkred'
+        WS6: 'darkblue'
+        WS7: 'darkorange'
+        WS8: 'darkcyan'
+        WS9: 'cyan'
+
+## __________________________________________
+RADON:
+    channel: 'RDN'
+    
+    timePeriod: 14 # in days
+    resample: 4
+
+    pathToData: '/import/freenas-ffb-01-data/romy_archive/'
+    outpath: '/import/freenas-ffb-01-data/HTML_Monitor/figures/'
+    outname: 'html_radon_plots'
+
+## __________________________________________
+TILT:
+    seed_id: ["BW.TROMY.*.MA*", "BW.DROMY.*.LA*"]
+    repository: "george"
+
+    timePeriod: 14 # in days
+
+    datapath: None
+    
+    setFilter: True
+    filter_type: 'lowpass'
+    filter_corners: [None, 0.1]
+    resampling: None # in Hz
+
+    outpath: '/import/freenas-ffb-01-data/HTML_Monitor/figures/'
+    outname: 'html_tilt_plots'
+
+## __________________________________________
+ROMY:
+    seed_id: ["BW.ROMY.10.BJZ","BW.ROMY..BJU","BW.ROMY..BJV","BW.ROMY..BJW", "BW.RLAS.*.BJZ"]
+    repository: "george"
+
+    timePeriod: 50 # in minutes
+
+    datapath: None
+    
+    setFilter: True
+    filter_type: 'bandpass'
+    filter_corners: [0.01, 0.1]
+    resampling: None # in Hz
+
+    outpath: '/import/freenas-ffb-01-data/HTML_Monitor/figures/'
+    outname: 'html_romy_plots'
+
+## __________________________________________
+ARRAY:
+    sta: ['FUR', 'GELB','GRMB','BIB','TON', 'ALFT', 'FFB1', 'FFB2', 'FFB3']
+    net: ['GR', 'BW','BW','BW','BW','BW','BW','BW','BW']
+    loc: ''
+    cha: 'BHZ'
+    repository: "jane"
+   
+    setFilter: True
+    filter_type: 'bandpass'
+    filter_corners: [0.01, 0.1]
+    resampling: None # in Hz
+
+    outpath: '/import/freenas-ffb-01-data/HTML_Monitor/figures/'
+    outname: 'html_array_plots'
+

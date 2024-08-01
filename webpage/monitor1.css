@@ -1,0 +1,73 @@
+/* Panel for ARRAY plot */ 
+.panel1 {
+    width: 100%;
+    height: auto;
+    position: absolute;
+    flex: 0%;
+    max-width: 50%;
+    padding: 0 4px;
+}
+
+.panel1 img {
+    vertical-align: middle;
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: auto;
+    height: 900px;
+    max-height: 100vh;
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+/* Panel for ROMY plot  */ 
+.panel2 {
+    width: 100%;
+    height: auto;
+    position: absolute;
+    flex: 0%;
+    max-width: 50%;
+    padding: 0 4px;
+}
+
+.panel2 img {
+    vertical-align: middle;
+    position: absolute;
+    top: -5px;
+    left: 850px;
+    width: 1050px;
+    height: auto;
+    margin-right: 5px;
+    margin-top: 5px;
+}
+
+/* Panel for UTC datetime plot */ 
+.panel-time {
+    width: 100%;
+    height: auto;
+    position: absolute;
+    top: 820px;
+    left: 1400px;
+    width: 1050px;
+    flex: 0%;
+}
+
+
+body {
+  height: 100%;
+  overflow: hidden;
+  background-color: lightgray;
+  position: absolute;
+}
+
+<!--
+.frame {
+  background-color: lightgray;
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: black;
+}
+-->

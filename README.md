@@ -1,4 +1,4 @@
-ROMY Mnnitor
+ROMY Monitor
 
 - HTML and CSS files for monitor
 - Python scripts to make figures

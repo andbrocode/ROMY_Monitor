@@ -21,6 +21,11 @@ from IPython.display import Image, display
 from datetime import datetime
 from numpy import asarray
 
+import os
+#os.environ['MPLCONFIGDIR'] = "/import/kilauea-data/tmp_cache_matplotlib/"
+os.environ['MPLCONFIGDIR'] = "/tmp/"
+
+
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 

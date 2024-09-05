@@ -14,7 +14,6 @@ import obspy as obs
 import matplotlib.colors
 
 from pandas import DataFrame, merge
-from andbro__save_to_pickle import __save_to_pickle
 
 
 # In[2]:

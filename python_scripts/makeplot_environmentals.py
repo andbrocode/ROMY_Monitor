@@ -14,6 +14,7 @@ import os
 import gc
 import matplotlib.pyplot as plt
 import numpy as np
+import obspy as obs
 
 from datetime import datetime, date
 from pandas import DataFrame, read_pickle, date_range, concat, read_csv
@@ -325,9 +326,11 @@ except:
 
 
 ps = Stream()
+
 try:
-    ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.03.LKI", config['tbeg'], config['tend'])
     ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.01.LKI", config['tbeg'], config['tend'])
+    ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.03.LKI", config['tbeg'], config['tend'])
+    ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.05.LKI", config['tbeg'], config['tend'])
     ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.07.LKI", config['tbeg'], config['tend'])
     ps += __read_sds(archive_path+"temp_archive/", "BW.PROMY.09.LKI", config['tbeg'], config['tend'])
 
@@ -394,8 +397,10 @@ except:
 # path_to_tilt = data_path+"TiltmeterDataBackup/Tilt_downsampled/"
 path_to_tilt = archive_path+"romy_archive/"
 
+tromy0 = obs.Stream()
+
 try:
-    tromy0 =  __read_sds(path_to_tilt, "BW.ROMYT..MAN", config['tbeg']-600, config['tend']+600)
+    tromy0 += __read_sds(path_to_tilt, "BW.ROMYT..MAN", config['tbeg']-600, config['tend']+600)
     tromy0 += __read_sds(path_to_tilt, "BW.ROMYT..MAE", config['tbeg']-600, config['tend']+600)
     tromy0 += __read_sds(path_to_tilt, "BW.ROMYT..MAT", config['tbeg']-600, config['tend']+600)
 except:
@@ -500,8 +505,10 @@ gc.collect()
 # In[26]:
 
 
+ffbi = obs.Stream()
+
 try:
-    ffbi = __read_sds(archive_path+"temp_archive/", "BW.FFBI.30.LDF", config['tbeg'], config['tend'])
+    ffbi += __read_sds(archive_path+"temp_archive/", "BW.FFBI.30.LDF", config['tbeg'], config['tend'])
     ffbi += __read_sds(archive_path+"temp_archive/", "BW.FFBI.30.LDO", config['tbeg'], config['tend'])
 
     # create smoothed data
@@ -515,7 +522,7 @@ except:
 
 # ## Plotting
 
-# In[31]:
+# In[27]:
 
 
 def __makeplot():
@@ -632,7 +639,6 @@ def __makeplot():
 
     ax[3].set_ylabel("Tilt ($\mu$rad)", fontsize=font)
 
-    # ax[3].set_ylim(-12, 8)
     y_max = max(np.nanpercentile(tromyN_smooth, 99)*1e6, np.nanpercentile(tromyE_smooth, 99)*1e6)
     y_min = min(np.nanpercentile(tromyN_smooth, 1)*1e6, np.nanpercentile(tromyE_smooth, 1)*1e6)
     ax[3].set_ylim(y_min*1.2, y_max*1.2)
@@ -697,6 +703,7 @@ def __makeplot():
 
     # _____________________________________________________________________________________
     #
+
     for _n in range(Nrow):
         ax[_n].grid(ls=":", zorder=0, alpha=0.5)
         # ax[_n].set_xlim(left=0, right=np.array(bs.time_sec)[-1]*time_scaling)
@@ -710,7 +717,7 @@ def __makeplot():
             ax[_n].fill_betweenx([_ymin, _ymax], lx1_sec, lx2_sec, color="yellow", alpha=0.5)
 
     ax[0].legend(loc=4, ncol=4, fontsize=font-1)
-    ax[1].legend(loc=9, ncol=3, fontsize=font-1)
+    ax[1].legend(loc=9, ncol=4, fontsize=font-1)
     ax11.legend(loc=4, ncol=1, fontsize=font-1)
     ax[3].legend(loc=4, ncol=2, fontsize=font-1)
     ax[4].legend(loc=1, ncol=1, fontsize=font-1)
@@ -726,7 +733,7 @@ def __makeplot():
     return fig
 
 
-# In[32]:
+# In[28]:
 
 
 fig = __makeplot();

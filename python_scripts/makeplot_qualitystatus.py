@@ -29,17 +29,20 @@ if os.uname().nodename == 'lighthouse':
     root_path = '/home/andbro/'
     data_path = '/home/andbro/kilauea-data/'
     archive_path = '/home/andbro/freenas/'
-    bay_path = '/home/andbro/bay200/'
+    bay_path = '/home/andbro/ontap-ffb-bay200/'
+    lamont_path = '/home/andbro/lamont/'
 elif os.uname().nodename == 'kilauea':
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/bay200/'
-elif os.uname().nodename == 'lin-ffb-01':
+    bay_path = '/import/ontap-ffb-bay200/'
+    lamont_path = '/lamont/'
+elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/bay200/'
+    bay_path = '/import/ontap-ffb-bay200/'
+    lamont_path = '/lamont/'
 
 
 # ## Configurations
@@ -252,7 +255,7 @@ df_year = df_new.copy()
 
 # ### Plotting
 
-# In[13]:
+# In[19]:
 
 
 def __makeplot():
@@ -294,14 +297,14 @@ def __makeplot():
 
         r = range(df_stats.ring.size)
 
-        ax.bar(r, df_stats.R_0_p,
-                color='darkred', edgecolor='k', width=barWidth, label="Bad Quality")
-
-        ax.bar(r, df_stats.R_1_p, bottom=df_stats.R_0_p,
+        ax.bar(r, df_stats.R_1_p,
                 color='green', edgecolor='k', width=barWidth, label="Good Quality")
 
-        ax.bar(r, df_stats.R_nan_p, bottom=[i+j for i, j in zip(df_stats.R_0_p, df_stats.R_1_p)],
-                color='white', edgecolor='k', width=barWidth, label="NaN")
+        ax.bar(r, df_stats.R_0_p, bottom=df_stats.R_1_p,
+                color='darkred', edgecolor='k', width=barWidth, label="Bad Quality")
+
+        ax.bar(r, df_stats.R_nan_p, bottom=[i+j for i, j in zip(df_stats.R_1_p, df_stats.R_0_p)],
+                color='white', edgecolor='k', width=barWidth, label="N/A")
 
         ax.set_xticks(r, df_stats.ring)
 
@@ -360,7 +363,7 @@ def __makeplot():
     return fig
 
 
-# In[14]:
+# In[20]:
 
 
 fig = __makeplot()

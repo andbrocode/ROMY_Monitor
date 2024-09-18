@@ -46,26 +46,26 @@ from functions.load_beam_wander_data import __load_beam_wander_data
 from functions.find_max_min import __find_max_min
 
 
-# In[3]:
+# In[31]:
 
 
 if os.uname().nodename == 'lighthouse':
     root_path = '/home/andbro/'
     data_path = '/home/andbro/kilauea-data/'
     archive_path = '/home/andbro/freenas/'
-    bay_path = '/home/andbro/bay200/'
+    bay_path = '/home/andbro/ontap-ffb-bay200/'
     lamont_path = '/home/andbro/lamont/'
 elif os.uname().nodename == 'kilauea':
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/bay200/'
+    bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
-elif os.uname().nodename == 'lin-ffb-01':
+elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/bay200/'
+    bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
 
 
@@ -100,7 +100,7 @@ config['tbeg'] = config['tend'] - config['time_interval'] * 86400
 # define path to data
 config['path_to_sds'] = archive_path+"romy_archive/"
 
-## path to Sagnac data
+# path to Sagnac data
 config['path_to_autodata'] = archive_path+f"romy_autodata/"
 
 config['path_to_data'] = data_path+"sagnac_frequency/data/backscatter/"
@@ -358,7 +358,7 @@ def __cumsum_rain(arr, n_samples):
     return arr_out
 
 
-# In[18]:
+# In[32]:
 
 
 try:
@@ -368,7 +368,7 @@ except:
     pass
 
 
-# In[19]:
+# In[33]:
 
 
 try:
@@ -452,16 +452,16 @@ except:
 
 # ### Load Beam Wander Data
 
-# In[23]:
+# In[52]:
 
 
 try:
-    cam = "03"
+    cam = "01"
 
-    bw = __load_beam_wander_data(config['tbeg'].date, config['tend'].date, data_path+f"ids/data{cam}/")
+    bw1 = __load_beam_wander_data(config['tbeg'].date, config['tend'].date, data_path+f"ids/data{cam}/")
 
 except:
-    print(f" -> Error: beam wander data")
+    print(f" -> Error: beam walk 03")
     pass
 
 
@@ -469,32 +469,94 @@ except:
 
 
 try:
-    bw = bw[(bw.time > config['tbeg']) & (bw.time < config['tend'])]
+    cam = "03"
 
-    bw['time_utc'] = np.array([UTCDateTime(_t) for _t in bw.time])
+    bw3 = __load_beam_wander_data(config['tbeg'].date, config['tend'].date, data_path+f"ids/data{cam}/")
+
+except:
+    print(f" -> Error: beam walk 03")
+    pass
+
+
+# In[25]:
+
+
+try:
+    cam = "05"
+
+    bw5 = __load_beam_wander_data(config['tbeg'].date, config['tend'].date, data_path+f"ids/data{cam}/")
+
+except:
+    print(f" -> Error: beam walk 03")
+    pass
+
+
+# In[47]:
+
+
+def processing(_bw):
+
+    _bw = _bw[(_bw.time > config['tbeg']) & (_bw.time < config['tend'])]
+
+    _bw['time_utc'] = np.array([UTCDateTime(_t) for _t in _bw.time])
 
     # conversion from pixel to mm
     config['conversion'] = {"XX":1.67e-3,
                             "01":5.3e-3,
                             "03":5.3e-3,
+                            "05":5.3e-3,
                             "07":5.3e-3,
                            }
 
-    bw['x_mm'] = bw.x*config['conversion'][cam]
-    bw['y_mm'] = bw.y*config['conversion'][cam]
+    _bw['x_mm'] = _bw.x*config['conversion'][cam]
+    _bw['y_mm'] = _bw.y*config['conversion'][cam]
 
-    bw['x_mm'] = __reduce(bw.x_mm, 100)
-    bw['y_mm'] = __reduce(bw.y_mm, 100)
+    _bw['x_mm'] = __reduce(_bw.x_mm, 100)
+    _bw['y_mm'] = __reduce(_bw.y_mm, 100)
 
-    bw = bw[bw.amp > 20]
-    bw = bw[bw.amp < 255]
+    _bw = _bw[_bw.amp > 20]
+    _bw = _bw[_bw.amp < 255]
 
+    return _bw
+
+
+# In[53]:
+
+
+try:
+    bw1 = processing(bw1)
 except:
     print(f" -> Error: beam wander data processing")
     pass
 
 
-# In[25]:
+# In[50]:
+
+
+try:
+    bw3 = processing(bw3)
+except:
+    print(f" -> Error: beam wander data processing")
+    pass
+
+
+# In[51]:
+
+
+try:
+    bw5 = processing(bw5)
+except:
+    print(f" -> Error: beam wander data processing")
+    pass
+
+
+# In[54]:
+
+
+bws = [bw1, bw3, bw5]
+
+
+# In[27]:
 
 
 gc.collect()
@@ -502,7 +564,7 @@ gc.collect()
 
 # ### Load Infrasound FFBI
 
-# In[26]:
+# In[28]:
 
 
 ffbi = obs.Stream()
@@ -522,7 +584,7 @@ except:
 
 # ## Plotting
 
-# In[27]:
+# In[79]:
 
 
 def __makeplot():
@@ -546,49 +608,56 @@ def __makeplot():
 
     # _____________________________________________________________________________________
 
-    ax[0].plot(bs_time_sec*time_scaling, bs.fj_fs, color="tab:grey", alpha=0.3, label="raw")
-    ax[0].plot(bs_time_sec*time_scaling, bs.fj_fs_nan, color="black", label="cleaned")
-    ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_nan, color="red", label=f"BS corrected")
-    ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_smooth, color="white", lw=1)
-    # ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_dejump, color="gold", lw=1, label=f"BS dejump")
+    try:
+        ax[0].plot(bs_time_sec*time_scaling, bs.fj_fs, color="tab:grey", alpha=0.3, label="raw")
+        ax[0].plot(bs_time_sec*time_scaling, bs.fj_fs_nan, color="black", label="cleaned")
+        ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_nan, color="red", label=f"BS corrected")
+        ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_smooth, color="white", lw=1)
+        # ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_dejump, color="gold", lw=1, label=f"BS dejump")
 
-    f_min, f_max = __find_max_min([bs.fj_fs_nan], 99)
-    if f_min < 553.56:
-        f_min = 553.56
-    if f_max > 553.59:
-        f_max = 553.59
-    ax[0].set_ylim(f_min-0.001, f_max+0.001)
+        f_min, f_max = __find_max_min([bs.fj_fs_nan], 99)
+        if f_min < 553.56:
+            f_min = 553.56
+        if f_max > 553.59:
+            f_max = 553.59
+        ax[0].set_ylim(f_min-0.001, f_max+0.001)
 
-    ax[0].ticklabel_format(useOffset=False)
-    ax[0].set_ylabel(f"R{config['ring']} $\delta f$ (Hz)", fontsize=font)
+        ax[0].ticklabel_format(useOffset=False)
+        ax[0].set_ylabel(f"R{config['ring']} $\delta f$ (Hz)", fontsize=font)
+    except:
+        pass
 
     # _____________________________________________________________________________________
 
-    for tr in ws.select(channel="*T"):
-        num = int(tr.stats.location[-1])
-        if num != 1:
-            ax[1].plot(tr.times(reftime=ref_date),
-                       __smooth(tr.data, 600), color=config['colors'][num], label=f"WS{num}", alpha=0.7)
+    try:
 
-    for tr in ps.select(channel="*KI"):
-        num = int(tr.stats.location[-1])
-        if num != 1:
-            ax[1].plot(tr.times(reftime=ref_date),
-                       __smooth(tr.data, 600), color=config['colors'][num], label=f"PS{num}", alpha=0.7)
+        for tr in ws.select(channel="*T"):
+            num = int(tr.stats.location[-1])
+            if num != 1:
+                ax[1].plot(tr.times(reftime=ref_date),
+                           __smooth(tr.data, 600), color=config['colors'][num], label=f"WS{num}", alpha=0.7)
 
-    T_min, T_max = __find_max_min([_ps.data for _ps in ps.select(channel="*KI") if "1" not in _ps.stats.location], 98)
-    ax[1].set_ylim(T_min, T_max)
+        for tr in ps.select(channel="*KI"):
+            num = int(tr.stats.location[-1])
+            if num != 1:
+                ax[1].plot(tr.times(reftime=ref_date),
+                           __smooth(tr.data, 600), color=config['colors'][num], label=f"PS{num}", alpha=0.7)
 
-    ax[1].set_ylabel("Temp. (°C)", fontsize=font)
+        T_min, T_max = __find_max_min([_ps.data for _ps in ps.select(channel="*KI") if "1" not in _ps.stats.location], 98)
+        ax[1].set_ylim(T_min, T_max)
 
-    ax11 = ax[1].twinx()
-    ax11.plot(ps.select(location="01", channel="*KI")[0].times(reftime=UTCDateTime(ref_date)),
-              __smooth(ps.select(location="01", channel="*KI")[0].data, 600), color=config['colors'][1], label="PS1")
+        ax[1].set_ylabel("Temp. (°C)", fontsize=font)
 
-    ax11.set_ylabel("Temp. (°C)", fontsize=font, color=config['colors'][1])
-    [t.set_color(config['colors'][1]) for t in ax11.yaxis.get_ticklabels()]
-    ax[1].set_yticks(np.linspace(ax[1].get_yticks()[0], ax[1].get_yticks()[-1], len(ax[1].get_yticks())))
-    ax11.set_yticks(np.linspace(ax11.get_yticks()[0], ax11.get_yticks()[-1], len(ax[1].get_yticks())))
+        ax11 = ax[1].twinx()
+        ax11.plot(ps.select(location="01", channel="*KI")[0].times(reftime=UTCDateTime(ref_date)),
+                  __smooth(ps.select(location="01", channel="*KI")[0].data, 600), color=config['colors'][1], label="PS1")
+
+        ax11.set_ylabel("Temp. (°C)", fontsize=font, color=config['colors'][1])
+        [t.set_color(config['colors'][1]) for t in ax11.yaxis.get_ticklabels()]
+        ax[1].set_yticks(np.linspace(ax[1].get_yticks()[0], ax[1].get_yticks()[-1], len(ax[1].get_yticks())))
+        ax11.set_yticks(np.linspace(ax11.get_yticks()[0], ax11.get_yticks()[-1], len(ax[1].get_yticks())))
+    except:
+        pass
 
     # _____________________________________________________________________________________
 
@@ -621,88 +690,136 @@ def __makeplot():
     ax24.set_ylabel(f"Cum. Rain (%)", fontsize=font, color="darkblue")
     [t.set_color('darkblue') for t in ax24.yaxis.get_ticklabels()]
 
-     # _____________________________________________________________________________________
-    #
-    ax[3].plot(tromy.select(channel="*N")[0].times(reftime=ref_date)[:-20],
-               tromyN_smooth[:-20]*1e6,
-               label=f"T{tromy[0].stats.station} N-S (20 sec. avg.)", color="tab:orange")
-    ax[3].plot(tromy.select(channel="*E")[0].times(reftime=ref_date)[:-20],
-               tromyE_smooth[:-20]*1e6,
-               label=f"T{tromy[0].stats.station} E-W (20 sec. avg.)", color="tab:brown")
+    # _____________________________________________________________________________________
 
-    # ax[3].plot(bromy.select(channel="*N")[0].times(reftime=UTCDateTime(ref_date))[:-20],
-    #            bromyN_smooth[:-20]*1e6,
-    #            label=f"T{bromy[0].stats.station} N-S (20 sec. avg.)", color="tab:red")
-    # ax[3].plot(bromy.select(channel="*E")[0].times(reftime=UTCDateTime(ref_date))[:-20],
-    #            bromyE_smooth[:-20]*1e6,
-    #            label=f"T{bromy[0].stats.station} E-W (20 sec. avg.)", color="tab:blue")
+    try:
+        ax[3].plot(tromy.select(channel="*N")[0].times(reftime=ref_date)[:-20],
+                   tromyN_smooth[:-20]*1e6,
+                   label=f"T{tromy[0].stats.station} N-S (20 sec. avg.)", color="tab:orange")
+        ax[3].plot(tromy.select(channel="*E")[0].times(reftime=ref_date)[:-20],
+                   tromyE_smooth[:-20]*1e6,
+                   label=f"T{tromy[0].stats.station} E-W (20 sec. avg.)", color="tab:brown")
 
-    ax[3].set_ylabel("Tilt ($\mu$rad)", fontsize=font)
+        # ax[3].plot(bromy.select(channel="*N")[0].times(reftime=UTCDateTime(ref_date))[:-20],
+        #            bromyN_smooth[:-20]*1e6,
+        #            label=f"T{bromy[0].stats.station} N-S (20 sec. avg.)", color="tab:red")
+        # ax[3].plot(bromy.select(channel="*E")[0].times(reftime=UTCDateTime(ref_date))[:-20],
+        #            bromyE_smooth[:-20]*1e6,
+        #            label=f"T{bromy[0].stats.station} E-W (20 sec. avg.)", color="tab:blue")
 
-    y_max = max(np.nanpercentile(tromyN_smooth, 99)*1e6, np.nanpercentile(tromyE_smooth, 99)*1e6)
-    y_min = min(np.nanpercentile(tromyN_smooth, 1)*1e6, np.nanpercentile(tromyE_smooth, 1)*1e6)
-    ax[3].set_ylim(y_min*1.2, y_max*1.2)
+        ax[3].set_ylabel("Tilt ($\mu$rad)", fontsize=font)
+
+        y_max = max(np.nanpercentile(tromyN_smooth, 99)*1e6, np.nanpercentile(tromyE_smooth, 99)*1e6)
+        y_min = min(np.nanpercentile(tromyN_smooth, 1)*1e6, np.nanpercentile(tromyE_smooth, 1)*1e6)
+        ax[3].set_ylim(y_min*1.2, y_max*1.2)
+    except:
+        pass
+
 
     # _____________________________________________________________________________________
-    #
-    ax[4].plot(ffbi.select(channel="*F")[0].times(reftime=ref_date),
-               ffbi_bdf_smooth1,
-               label=f"{ffbi.select(channel='*F')[0].stats.station}.{ffbi.select(channel='*F')[0].stats.channel} (1 min. avg.)",
-               color="tab:red"
-              )
-    ax[4].plot(ffbi.select(channel="*F")[0].times(reftime=ref_date),
-               ffbi_bdf_smooth2,
-               color="white", ls="-", lw=1,
-              )
 
-    ax[4].set_ylabel("Differential \n Pressure (Pa)", fontsize=font)
+    try:
+        ax[4].plot(ffbi.select(channel="*F")[0].times(reftime=ref_date),
+                   ffbi_bdf_smooth1,
+                   label=f"{ffbi.select(channel='*F')[0].stats.station}.{ffbi.select(channel='*F')[0].stats.channel} (1 min. avg.)",
+                   color="tab:red"
+                  )
+        ax[4].plot(ffbi.select(channel="*F")[0].times(reftime=ref_date),
+                   ffbi_bdf_smooth2,
+                   color="white", ls="-", lw=1,
+                  )
 
-    ax41 = ax[4].twinx()
-    ax41.plot(ffbi.select(channel="*O")[0].times(reftime=ref_date),
-              ffbi.select(channel="*O")[0].data,
-              color="darkred"
-              )
-    ax41.set_ylabel("Pressure (hPa)", fontsize=font, color="darkred")
-    [t.set_color('darkred') for t in ax41.yaxis.get_ticklabels()]
+        ax[4].set_ylabel("Differential \n Pressure (Pa)", fontsize=font)
 
-    # ------------------------------------------------
-    # add wind direction
-    # ax42 = ax[4].twinx()
-    # ax42.scatter(furt.select(channel="*D")[0].times(reftime=config['tbeg']),
-    #              __smooth(furt.select(channel="*D")[0].data, 3600), color="peru", s=0.5, alpha=0.5,
-    #             )
-    # ax42.spines.right.set_position(("axes", 1.1))
-    # ax42.set_ylabel("Wind Direction (°)", fontsize=font, color="peru")
-    # [t.set_color('peru') for t in ax42.yaxis.get_ticklabels()]
-    # ax42.set_ylim(0, 360)
-    # ax42.set_zorder(1)
+        ax41 = ax[4].twinx()
+        ax41.plot(ffbi.select(channel="*O")[0].times(reftime=ref_date),
+                  ffbi.select(channel="*O")[0].data,
+                  color="darkred"
+                  )
+        ax41.set_ylabel("Pressure (hPa)", fontsize=font, color="darkred")
+        [t.set_color('darkred') for t in ax41.yaxis.get_ticklabels()]
 
-    # _____________________________________________________________________________________
-    #
-
-    ax[5].scatter(bw.time_utc - ref_date,
-                  bw.x_mm*1e3,
-                  label=f"X (in-plane)",
-                  color="tab:pink",
-                  zorder=2,
-                  s=3,
-              )
-
-    ax[5].scatter(bw.time_utc - ref_date,
-                  bw.y_mm*1e3,
-                  label=f"Y (out-of-plane)",
-                  color="purple",
-                  zorder=2,
-                  s=3,
-              )
-
-    ax[5].set_ylabel("rel. Beam \n Position ($\mu$m)", fontsize=font)
-
-    bw_min, bw_max = __find_max_min([bw.x_mm*1e3, bw.y_mm*1e3], 99)
-    ax[5].set_ylim(bw_min, bw_max)
+        # ------------------------------------------------
+        # add wind direction
+        # ax42 = ax[4].twinx()
+        # ax42.scatter(furt.select(channel="*D")[0].times(reftime=config['tbeg']),
+        #              __smooth(furt.select(channel="*D")[0].data, 3600), color="peru", s=0.5, alpha=0.5,
+        #             )
+        # ax42.spines.right.set_position(("axes", 1.1))
+        # ax42.set_ylabel("Wind Direction (°)", fontsize=font, color="peru")
+        # [t.set_color('peru') for t in ax42.yaxis.get_ticklabels()]
+        # ax42.set_ylim(0, 360)
+        # ax42.set_zorder(1)
+    except:
+        pass
 
     # _____________________________________________________________________________________
-    #
+
+    try:
+        try:
+            ax[5].plot(bw1.time_utc - ref_date,
+                          bw1.x_mm*1e3,
+                          label=f"IDS01-X",
+                          color=config['colors'][1],
+                          zorder=2,
+                          ls="--",
+                      )
+
+            ax[5].plot(bw1.time_utc - ref_date,
+                          bw1.y_mm*1e3,
+                          label=f"IDS01-Y",
+                          color=config['colors'][1],
+                          zorder=2,
+                      )
+        except:
+            pass
+
+        try:
+            ax[5].plot(bw3.time_utc - ref_date,
+                          bw3.x_mm*1e3,
+                          label=f"IDS03-X",
+                          color=config['colors'][3],
+                          zorder=2,
+                          ls="--",
+                      )
+
+            ax[5].plot(bw3.time_utc - ref_date,
+                          bw3.y_mm*1e3,
+                          label=f"IDS03-Y",
+                          color=config['colors'][3],
+                          zorder=2,
+                      )
+        except:
+            pass
+
+        try:
+            ax[5].plot(bw5.time_utc - ref_date,
+                          bw5.x_mm*1e3,
+                          label=f"IDS05-X",
+                          color=config['colors'][5],
+                          zorder=2,
+                          ls="--",
+                      )
+
+            ax[5].plot(bw5.time_utc - ref_date,
+                          bw5.y_mm*1e3,
+                          label=f"IDS05-Y",
+                          color=config['colors'][5],
+                          zorder=2,
+                      )
+        except:
+            pass
+
+        ax[5].set_ylabel("rel. Beam \n Position ($\mu$m)", fontsize=font)
+
+        bws = [bw1.x_mm*1e3, bw1.y_mm*1e3, bw3.x_mm*1e3, bw3.y_mm*1e3, bw5.x_mm*1e3, bw5.y_mm*1e3]
+        bw_min, bw_max = __find_max_min(bws, 99)
+        ax[5].set_ylim(bw_min, bw_max)
+    except:
+        pass
+
+    # _____________________________________________________________________________________
+
 
     for _n in range(Nrow):
         ax[_n].grid(ls=":", zorder=0, alpha=0.5)
@@ -721,7 +838,7 @@ def __makeplot():
     ax11.legend(loc=4, ncol=1, fontsize=font-1)
     ax[3].legend(loc=4, ncol=2, fontsize=font-1)
     ax[4].legend(loc=1, ncol=1, fontsize=font-1)
-    ax[5].legend(loc=4, ncol=2, fontsize=font-1)
+    ax[5].legend(loc=2, ncol=3, fontsize=font-1)
 
     # add dates to x-axis
     tcks = ax[Nrow-1].get_xticks()
@@ -733,7 +850,7 @@ def __makeplot():
     return fig
 
 
-# In[28]:
+# In[80]:
 
 
 fig = __makeplot();

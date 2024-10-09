@@ -11,6 +11,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pandas import DataFrame
 from obspy import UTCDateTime, Stream
 
 
@@ -20,7 +21,7 @@ from obspy import UTCDateTime, Stream
 # sys.path.append('..')
 
 
-# In[3]:
+# In[27]:
 
 
 from functions.load_lxx import __load_lxx
@@ -28,6 +29,7 @@ from functions.get_lxx_intervals import __get_lxx_intervals
 from functions.read_sds import __read_sds
 from functions.load_furt_stream import __load_furt_stream
 from functions.read_wromy_data import __read_wromy_data
+from functions.find_labels import __find_lables
 
 
 # In[4]:
@@ -37,17 +39,17 @@ if os.uname().nodename == 'lighthouse':
     root_path = '/home/andbro/'
     data_path = '/home/andbro/kilauea-data/'
     archive_path = '/home/andbro/freenas/'
-    bay_path = '/home/andbro/ontap-ffb-bay200/'
+    bay_path = '/home/andbro/bay200/'
 elif os.uname().nodename == 'kilauea':
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/import/ontap-ffb-bay200/'
+    bay_path = '/bay200/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
-    bay_path = '/import/ontap-ffb-bay200/'
+    bay_path = '/bay200/'
 
 
 # In[5]:
@@ -227,7 +229,7 @@ except Exception as e:
 
 # ### Plotting
 
-# In[23]:
+# In[28]:
 
 
 def __makeplot():
@@ -304,9 +306,9 @@ def __makeplot():
         # ax[_n].grid(ls=":", zorder=0)
         ax[_n].set_xlim(left=0)
 
-    ax[1].legend(ncol=4, bbox_to_anchor=(0.8, 2.55), fontsize=font-2)
+    ax[1].legend(ncol=4, bbox_to_anchor=(0.5, 2.55), fontsize=font-2)
 
-    ## add maintenance
+    # add maintenance
     for lx1, lx2 in zip(lxx_t1, lxx_t2):
         lx1_sec = lx1-config['tbeg']
         lx2_sec = lx2-config['tbeg']
@@ -314,31 +316,39 @@ def __makeplot():
             ax[i].fill_betweenx([-1000, 1000], lx1_sec, lx2_sec, color="yellow", alpha=0.5)
 
     # add dates to x-axis
-    tdiff = config['tend'] - config['tbeg']
-    time_step = config['time_interval'] / 5 * 86400
-    tcks = [tdiff - x for x in np.arange(0, 5*time_step, time_step)]
-    tcklbls = [f"{(config['tbeg']+t).date} \n {str((config['tbeg']+t).time).split('.')[0]}" for t in tcks]
-    ax[Nrow-1].set_xticks(tcks)
+    # tdiff = config['tend'] - config['tbeg']
+    # time_step = config['time_interval'] / 5 * 86400
+    # tcks = [tdiff - x for x in np.arange(0, 5*time_step, time_step)]
+    # tcklbls = [f"{(config['tbeg']+t).date} \n {str((config['tbeg']+t).time).split('.')[0]}" for t in tcks]
+    # ax[Nrow-1].set_xticks(tcks)
+    # ax[Nrow-1].set_xticklabels(tcklbls)
+
+    df0 = DataFrame()
+    df0['times_utc'] = furt[0].times("utcdatetime")
+
+    # add dates for x-axis
+    lbl_times, lbl_index = __find_lables(df0, "times_utc", config['tbeg'], config['tend'], nth=4)
+    tcklbls = [str(_lbl).split('.')[0].replace('T', '\n') for _lbl in lbl_times]
+    ax[Nrow-1].set_xticks([_lt - config['tbeg'] for _lt in lbl_times])
     ax[Nrow-1].set_xticklabels(tcklbls)
 
     # plt.show();
-
     return fig
 
 
-# In[ ]:
+# In[29]:
 
 
 fig = __makeplot();
 
 
-# In[ ]:
+# In[30]:
 
 
 fig.savefig(config['path_to_figs']+f"html_wromy.png", format="png", dpi=150, bbox_inches='tight')
 
 
-# In[ ]:
+# In[31]:
 
 
 del fig

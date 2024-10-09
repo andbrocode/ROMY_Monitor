@@ -44,9 +44,10 @@ from functions.conversion_to_tilt import __conversion_to_tilt
 from functions.load_water_level import __load_water_level
 from functions.load_beam_wander_data import __load_beam_wander_data
 from functions.find_max_min import __find_max_min
+from functions.find_labels import __find_lables
 
 
-# In[31]:
+# In[3]:
 
 
 if os.uname().nodename == 'lighthouse':
@@ -93,9 +94,14 @@ config['seed'] = f"BW.DROMY..FJ{config['ring']}"
 # specify length of time interval to show
 config['time_interval'] = 14 # days
 
+config['last_reset'] = UTCDateTime("2024-10-01 14:00")
+
 # define time interval
 config['tend'] = UTCDateTime().now()
-config['tbeg'] = config['tend'] - config['time_interval'] * 86400
+if abs(config['tend'] - config['last_reset']) > config['time_interval']*86400:
+    config['tbeg'] = config['tend'] - config['time_interval'] * 86400
+else:
+    config['tbeg'] = config['last_reset']
 
 # define path to data
 config['path_to_sds'] = archive_path+"romy_archive/"
@@ -358,7 +364,7 @@ def __cumsum_rain(arr, n_samples):
     return arr_out
 
 
-# In[32]:
+# In[18]:
 
 
 try:
@@ -368,7 +374,7 @@ except:
     pass
 
 
-# In[33]:
+# In[19]:
 
 
 try:
@@ -452,7 +458,7 @@ except:
 
 # ### Load Beam Wander Data
 
-# In[52]:
+# In[23]:
 
 
 try:
@@ -491,7 +497,7 @@ except:
     pass
 
 
-# In[47]:
+# In[26]:
 
 
 def processing(_bw):
@@ -520,7 +526,7 @@ def processing(_bw):
     return _bw
 
 
-# In[53]:
+# In[27]:
 
 
 try:
@@ -530,7 +536,7 @@ except:
     pass
 
 
-# In[50]:
+# In[28]:
 
 
 try:
@@ -540,7 +546,7 @@ except:
     pass
 
 
-# In[51]:
+# In[29]:
 
 
 try:
@@ -550,13 +556,13 @@ except:
     pass
 
 
-# In[54]:
+# In[30]:
 
 
 bws = [bw1, bw3, bw5]
 
 
-# In[27]:
+# In[31]:
 
 
 gc.collect()
@@ -564,7 +570,7 @@ gc.collect()
 
 # ### Load Infrasound FFBI
 
-# In[28]:
+# In[32]:
 
 
 ffbi = obs.Stream()
@@ -584,7 +590,7 @@ except:
 
 # ## Plotting
 
-# In[79]:
+# In[39]:
 
 
 def __makeplot():
@@ -616,10 +622,10 @@ def __makeplot():
         # ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_dejump, color="gold", lw=1, label=f"BS dejump")
 
         f_min, f_max = __find_max_min([bs.fj_fs_nan], 99)
-        if f_min < 553.56:
-            f_min = 553.56
-        if f_max > 553.59:
-            f_max = 553.59
+        if f_min < 553.50:
+            f_min = 553.50
+        if f_max > 553.6:
+            f_max = 553.6
         ax[0].set_ylim(f_min-0.001, f_max+0.001)
 
         ax[0].ticklabel_format(useOffset=False)
@@ -831,18 +837,24 @@ def __makeplot():
         for lx1, lx2 in zip(lxx_t1, lxx_t2):
             lx1_sec = lx1-UTCDateTime(ref_date)
             lx2_sec = lx2-UTCDateTime(ref_date)
-            ax[_n].fill_betweenx([_ymin, _ymax], lx1_sec, lx2_sec, color="yellow", alpha=0.5)
+            ax[_n].fill_betweenx([_ymin, _ymax], lx1_sec*time_scaling, lx2_sec*time_scaling, color="yellow", alpha=0.5)
 
-    ax[0].legend(loc=4, ncol=4, fontsize=font-1)
-    ax[1].legend(loc=9, ncol=4, fontsize=font-1)
-    ax11.legend(loc=4, ncol=1, fontsize=font-1)
-    ax[3].legend(loc=4, ncol=2, fontsize=font-1)
-    ax[4].legend(loc=1, ncol=1, fontsize=font-1)
-    ax[5].legend(loc=2, ncol=3, fontsize=font-1)
+    ax[0].legend(loc='best', ncol=4, fontsize=font-1)
+    ax[1].legend(loc='best', ncol=4, fontsize=font-1)
+    ax11.legend(loc='best', ncol=1, fontsize=font-1)
+    ax[3].legend(loc='best', ncol=2, fontsize=font-1)
+    ax[4].legend(loc='best', ncol=1, fontsize=font-1)
+    ax[5].legend(loc='best', ncol=3, fontsize=font-1)
 
     # add dates to x-axis
-    tcks = ax[Nrow-1].get_xticks()
-    tcklbls = [f"{UTCDateTime(UTCDateTime(ref_date)+t).date} \n {str(UTCDateTime(UTCDateTime(ref_date)+t).time).split('.')[0]}" for t in tcks]
+    # tcks = ax[Nrow-1].get_xticks()
+    # tcklbls = [f"{UTCDateTime(UTCDateTime(ref_date)+t).date} \n {str(UTCDateTime(UTCDateTime(ref_date)+t).time).split('.')[0]}" for t in tcks]
+    # ax[Nrow-1].set_xticklabels(tcklbls)
+
+    # add dates for x-axis
+    lbl_times, lbl_index = __find_lables(bs, "time1", config['tbeg'], config['tend'], nth=3)
+    tcklbls = [str(_lbl).split('.')[0].replace('T', '\n') for _lbl in lbl_times]
+    ax[Nrow-1].set_xticks([_lt - config['tbeg'] for _lt in lbl_times]*time_scaling)
     ax[Nrow-1].set_xticklabels(tcklbls)
 
     gc.collect()
@@ -850,7 +862,7 @@ def __makeplot():
     return fig
 
 
-# In[80]:
+# In[40]:
 
 
 fig = __makeplot();

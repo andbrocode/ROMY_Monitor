@@ -33,6 +33,7 @@ from functions.get_mlti_statistics import __get_mlti_statistics
 from functions.get_lxx_intervals import __get_lxx_intervals
 from functions.load_lxx import __load_lxx
 from functions.find_max_min import __find_max_min
+from functions.find_labels import __find_lables
 
 
 # In[3]:
@@ -69,9 +70,9 @@ config['time_interval'] = 21 # days
 config['tend'] = UTCDateTime().now()
 config['tbeg'] = config['tend'] - config['time_interval'] * 86400
 
-Zlower, Zupper = 553.55, 553.60
-Ulower, Uupper = 302.39, 302.49
-Vlower, Vupper = 447.70, 447.76
+Zlower, Zupper = 553.10, 553.60
+Ulower, Uupper = 302.30, 302.40
+Vlower, Vupper = 447.80, 447.70
 
 # specify path to data
 config['path_to_sds'] = archive_path+"romy_archive/"
@@ -259,7 +260,7 @@ except:
 
 # ### Get MLTI statistics
 
-# In[32]:
+# In[13]:
 
 
 try:
@@ -277,7 +278,7 @@ try:
     mlti_statsV = __get_mlti_statistics(mltiV, config['tbeg'], config['tend'],
                                         intervals=True, plot=False, ylog=False
                                        )
-    
+
     mlti_statsV["mlti_series_avg"] = __smooth(mlti_statsV["mlti_series"], 86400)
 
 except Exception as e:
@@ -290,7 +291,7 @@ try:
                                        )
 
     mlti_statsZ["mlti_series_avg"] = __smooth(mlti_statsZ["mlti_series"], 86400)
-    
+
 except Exception as e:
     print(e)
     print(f" -> failed to get MLTI statistics for RZ")
@@ -299,7 +300,7 @@ except Exception as e:
 
 # ## Smoothing
 
-# In[28]:
+# In[14]:
 
 
 n_minutes = 24*60
@@ -337,7 +338,7 @@ except:
 
 # ## Plotting
 
-# In[53]:
+# In[17]:
 
 
 def __makeplot():
@@ -364,6 +365,7 @@ def __makeplot():
         pass
     Z_min, Z_max = __find_max_min([beatZ.fj_nan], 99.9)
     ax[0].set_ylim(Z_min, Z_max)
+    print(Z_min, Z_max)
     ax[0].ticklabel_format(useOffset=False)
     ax[0].set_ylabel("Horizontal\nring (Hz)", fontsize=font)
 
@@ -445,18 +447,24 @@ def __makeplot():
     # ax[2].set_xlabel("Time (days)", fontsize=font)
 
     # add dates to x-axis
-    tdiff = config['tend'] - config['tbeg']
-    time_step = config['time_interval'] / 5 * 86400
-    tcks = [tdiff - x for x in np.arange(0, 5*time_step, time_step)]
-    tcklbls = [f"{(config['tbeg']+t).date} \n {str((config['tbeg']+t).time).split('.')[0]}" for t in tcks]
-    ax[Nrow-1].set_xticks(tcks)
+    # tdiff = config['tend'] - config['tbeg']
+    # time_step = config['time_interval'] / 5 * 86400
+    # tcks = [tdiff - x for x in np.arange(0, 5*time_step, time_step)]
+    # tcklbls = [f"{(config['tbeg']+t).date} \n {str((config['tbeg']+t).time).split('.')[0]}" for t in tcks]
+    # ax[Nrow-1].set_xticks(tcks)
+    # ax[Nrow-1].set_xticklabels(tcklbls)
+
+    # add dates for x-axis
+    lbl_times, lbl_index = __find_lables(beatZ, "times_utc", config['tbeg'], config['tend'], nth=5)
+    tcklbls = [str(_lbl).split('.')[0].replace('T', '\n') for _lbl in lbl_times]
+    ax[Nrow-1].set_xticks([_lt - config['tbeg'] for _lt in lbl_times]*time_scaling)
     ax[Nrow-1].set_xticklabels(tcklbls)
 
     # plt.show();
     return fig
 
 
-# In[54]:
+# In[18]:
 
 
 fig = __makeplot();

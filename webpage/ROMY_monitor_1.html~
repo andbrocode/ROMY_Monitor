@@ -12,7 +12,7 @@
       <div class="panel1">
         <img src="../figures/html_beamwalk.png"
              alt="Beam Walk" 
-             onerror="this.src='figures/error.png'">
+             onerror="this.src='figures/old/error.png'">
       </div>
     </div>
    </div>

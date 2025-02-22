@@ -70,9 +70,9 @@ config['time_interval'] = 21 # days
 config['tend'] = UTCDateTime().now()
 config['tbeg'] = config['tend'] - config['time_interval'] * 86400
 
-Zlower, Zupper = 553.10, 553.60
-Ulower, Uupper = 302.30, 302.40
-Vlower, Vupper = 447.80, 447.70
+Zlower, Zupper = 553.20, 553.55
+Ulower, Uupper = 302.30, 302.60
+Vlower, Vupper = 447.60, 447.80
 
 # specify path to data
 config['path_to_sds'] = archive_path+"romy_archive/"
@@ -118,19 +118,19 @@ def __makeplot():
 
     try:
         ax[0].plot(beatZ.times_utc_sec*time_scaling, beatZ.fj)
-        ax[0].set_ylim(553.53, 553.60)
+        ax[0].set_ylim(Zlower, Zupper)
         ax[0].ticklabel_format(useOffset=False)
     except:
         pass
     try:
         ax[1].plot(beatU.times_utc_sec*time_scaling, beatU.fj)
-        ax[1].set_ylim(302.4, 302.5)
+        ax[1].set_ylim(Ulower, Uupper)
         ax[1].ticklabel_format(useOffset=False)
     except:
         pass
     try:
         ax[2].plot(beatV.times_utc_sec*time_scaling, beatV.fj)
-        ax[2].set_ylim(447.6, 447.8)
+        ax[2].set_ylim(Vlower, Vupper)
         ax[2].ticklabel_format(useOffset=False)
     except:
         pass
@@ -186,7 +186,7 @@ except:
 
 try:
     # load log file
-    lxx =__load_lxx(config['tbeg'], config['tend'], archive_path)
+    lxx = __load_lxx(config['tbeg'], config['tend'], archive_path)
 
     # get intervals of maintenance work as utc times
     lxx_t1, lxx_t2 = __get_lxx_intervals(lxx.datetime)
@@ -254,13 +254,14 @@ try:
     # interpolate NaN values
     beatV['fj_inter'] = __interpolate_nan(np.array(beatV.fj_nan))
 
-except:
+except Exception as e:
     print(f" -> failed to load mlti log for RV")
+    print(e)
 
 
 # ### Get MLTI statistics
 
-# In[13]:
+# In[142]:
 
 
 try:
@@ -268,7 +269,7 @@ try:
                                         intervals=True, plot=False, ylog=False
                                        )
 
-    mlti_statsU["mlti_series_avg"] = __smooth(mlti_statsU["mlti_series"], 86400)
+    mlti_statsU["mlti_series_avg"] = __smooth(mlti_statsU["mlti_series"]*30, 86400, win="boxcar")*100
 
 except Exception as e:
     print(e)
@@ -279,7 +280,7 @@ try:
                                         intervals=True, plot=False, ylog=False
                                        )
 
-    mlti_statsV["mlti_series_avg"] = __smooth(mlti_statsV["mlti_series"], 86400)
+    mlti_statsV["mlti_series_avg"] = __smooth(mlti_statsV["mlti_series"]*30, 86400, win="boxcar")*100
 
 except Exception as e:
     print(e)
@@ -290,7 +291,7 @@ try:
                                         intervals=True, plot=False, ylog=False
                                        )
 
-    mlti_statsZ["mlti_series_avg"] = __smooth(mlti_statsZ["mlti_series"], 86400)
+    mlti_statsZ["mlti_series_avg"] = __smooth(mlti_statsZ["mlti_series"]*30, 86400, win="boxcar")*100
 
 except Exception as e:
     print(e)
@@ -300,7 +301,7 @@ except Exception as e:
 
 # ## Smoothing
 
-# In[14]:
+# In[143]:
 
 
 n_minutes = 24*60
@@ -338,7 +339,7 @@ except:
 
 # ## Plotting
 
-# In[17]:
+# In[144]:
 
 
 def __makeplot():
@@ -363,9 +364,13 @@ def __makeplot():
         # ax[0].plot(beatZ.times_utc_sec*time_scaling, beatZ.fj_smooth_masked, color="k", label=f"mov. avg. ({n_minutes} min)")
     except:
         pass
-    Z_min, Z_max = __find_max_min([beatZ.fj_nan], 99.9)
-    ax[0].set_ylim(Z_min, Z_max)
-    print(Z_min, Z_max)
+
+    try:
+        Z_min, Z_max = __find_max_min([beatZ.fj_nan], 99.9)
+        ax[0].set_ylim(Z_min, Z_max)
+    except:
+        pass
+
     ax[0].ticklabel_format(useOffset=False)
     ax[0].set_ylabel("Horizontal\nring (Hz)", fontsize=font)
 
@@ -375,8 +380,13 @@ def __makeplot():
         # ax[1].plot(beatU.times_utc_sec*time_scaling, beatU.fj_smooth_masked, color="k", label=f"mov. avg. ({n_minutes} min)")
     except:
         pass
-    U_min, U_max = __find_max_min([beatU.fj_nan], 99.9)
-    ax[1].set_ylim(U_min, U_max)
+
+    try:
+        U_min, U_max = __find_max_min([beatU.fj_nan], 99.9)
+        ax[1].set_ylim(U_min, U_max)
+    except:
+        pass
+
     ax[1].ticklabel_format(useOffset=False)
     ax[1].set_ylabel("Northern\nring (Hz)", fontsize=font)
 
@@ -384,10 +394,16 @@ def __makeplot():
         ax[2].plot(beatV.times_utc_sec*time_scaling, beatV.fj, color="tab:grey", alpha=0.3, label="RV (raw)")
         ax[2].plot(beatV.times_utc_sec*time_scaling, beatV.fj_nan, color="tab:red", label="RV (cleaned)")
         # ax[2].plot(beatV.times_utc_sec*time_scaling, beatV.fj_smooth_masked, color="k", label=f"mov. avg. ({n_minutes} min)")
-    except:
+    except Exception as e:
+        print(e)
         pass
-    V_min, V_max = __find_max_min([beatV.fj_nan], 99.9)
-    ax[2].set_ylim(V_min, V_max)
+
+    try:
+        V_min, V_max = __find_max_min([beatV.fj_nan], 99.9)
+        ax[2].set_ylim(V_min, V_max)
+    except:
+        ax[2].set_ylim(Vlower, Vupper)
+
     ax[2].set_ylim()
     ax[2].ticklabel_format(useOffset=False)
     ax[2].set_ylabel("Western\nring (Hz)", fontsize=font)
@@ -429,7 +445,7 @@ def __makeplot():
     # ax[3].set_ylim(0, 105)
     # ax[3].set_ylabel("cumulative\nMLTI", fontsize=font)
     ax[3].set_ylim(bottom=0)
-    ax[3].set_ylabel("MLTI\nDensity", fontsize=font)
+    ax[3].set_ylabel("MLTI\nDensity (%)", fontsize=font)
 
     for _n in range(Nrow):
         ax[_n].grid(ls=":", zorder=0)
@@ -464,12 +480,85 @@ def __makeplot():
     return fig
 
 
-# In[18]:
+# In[145]:
 
 
 fig = __makeplot();
 
 fig.savefig(config['path_to_figs']+f"html_beatdrift.png", format="png", dpi=150, bbox_inches='tight')
+
+del fig
+
+
+# In[ ]:
+
+
+
+
+
+# In[17]:
+
+
+# from functions.get_fft import __get_fft
+
+
+# In[18]:
+
+
+# fZ, specZ, _ = __get_fft(beatZ.fj_inter.values, dt=60, window="hann")
+# fU, specU, _ = __get_fft(beatU.fj_inter.values, dt=60, window="hann")
+# fV, specV, _ = __get_fft(beatV.fj_inter.values, dt=60, window="hann")
+
+
+# In[19]:
+
+
+# plt.plot(fU[fU>5e-6], specU[fU>5e-6], color="tab:green", label="U")
+# plt.plot(fZ[fZ>5e-6], specZ[fZ>5e-6], color="tab:blue", label="Z")
+# plt.plot(fV[fV>5e-6], specV[fV>5e-6], color="tab:red", label="V")
+
+# plt.xscale("log")
+# # plt.yscale("log")
+
+# plt.legend()
+
+
+# plt.xlabel("Frequenz (Hz)")
+# plt.ylabel("Spectral Amplitude")
+
+
+# In[ ]:
+
+
+
+
+
+# In[20]:
+
+
+mlti_statsU["mlti_series_avg"] = __smooth(mlti_statsU["mlti_series"]/max_num_mlti_per_day, 86400)
+
+
+# In[149]:
+
+
+# test = np.zeros(len(mlti_statsU["mlti_series"]))
+
+# for n, x in enumerate(test):
+#     if n%10000 == 0:
+#         test[n] = 1
+#     if n > 5e4:
+#         if n%5 == 1:
+#             test[n] = 1
+#     if n > 1e5:
+#         test[n] = np.random.randint(0, 1)
+
+# # data2 = __smooth(mlti_statsU["mlti_series"], 3600, win="boxcar")
+# data2 = __smooth(test, 3600, win="boxcar")
+# # data2 = test
+
+# plt.plot(test*100)
+# plt.plot(data2*100)
 
 
 # In[ ]:

@@ -94,7 +94,7 @@ config['seed'] = f"BW.DROMY..FJ{config['ring']}"
 # specify length of time interval to show
 config['time_interval'] = 14 # days
 
-config['last_reset'] = UTCDateTime("2024-10-01 14:00")
+config['last_reset'] = UTCDateTime("2024-10-23 12:00")
 
 # define time interval
 config['tend'] = UTCDateTime().now()
@@ -590,7 +590,7 @@ except:
 
 # ## Plotting
 
-# In[39]:
+# In[37]:
 
 
 def __makeplot():
@@ -622,7 +622,7 @@ def __makeplot():
         # ax[0].plot(bs_time_sec*time_scaling, bs.fj_bs_dejump, color="gold", lw=1, label=f"BS dejump")
 
         f_min, f_max = __find_max_min([bs.fj_fs_nan], 99)
-        if f_min < 553.50:
+        if f_min < 553.40:
             f_min = 553.50
         if f_max > 553.6:
             f_max = 553.6
@@ -662,6 +662,9 @@ def __makeplot():
         [t.set_color(config['colors'][1]) for t in ax11.yaxis.get_ticklabels()]
         ax[1].set_yticks(np.linspace(ax[1].get_yticks()[0], ax[1].get_yticks()[-1], len(ax[1].get_yticks())))
         ax11.set_yticks(np.linspace(ax11.get_yticks()[0], ax11.get_yticks()[-1], len(ax[1].get_yticks())))
+
+        ax11.legend(loc='best', ncol=1, fontsize=font-1)
+
     except:
         pass
 
@@ -671,6 +674,7 @@ def __makeplot():
         ax[2].plot(pegel.times_utc - ref_date, pegel.pegel, color="purple", alpha=0.9, zorder=3)
     except:
         pass
+
     ax[2].set_ylabel(f"Water Level (m)", fontsize=font, color="purple")
     # ax[2].set_zorder(3)
     [t.set_color("purple") for t in ax[2].yaxis.get_ticklabels()]
@@ -841,7 +845,6 @@ def __makeplot():
 
     ax[0].legend(loc='best', ncol=4, fontsize=font-1)
     ax[1].legend(loc='best', ncol=4, fontsize=font-1)
-    ax11.legend(loc='best', ncol=1, fontsize=font-1)
     ax[3].legend(loc='best', ncol=2, fontsize=font-1)
     ax[4].legend(loc='best', ncol=1, fontsize=font-1)
     ax[5].legend(loc='best', ncol=3, fontsize=font-1)
@@ -862,7 +865,7 @@ def __makeplot():
     return fig
 
 
-# In[40]:
+# In[38]:
 
 
 fig = __makeplot();

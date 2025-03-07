@@ -17,12 +17,7 @@ from obspy import UTCDateTime, Stream
 
 # In[2]:
 
-
 # sys.path.append('..')
-
-
-# In[3]:
-
 
 from functions.load_lxx import __load_lxx
 from functions.get_lxx_intervals import __get_lxx_intervals
@@ -30,7 +25,7 @@ from functions.read_sds import __read_sds
 from functions.load_furt_stream import __load_furt_stream
 from functions.read_wromy_data import __read_wromy_data
 from functions.find_labels import __find_lables
-
+from functions.smoothing import __smooth
 
 # In[4]:
 
@@ -100,7 +95,7 @@ config['path_to_sds'] = archive_path+"romy_archive/"
 config['path_to_figs'] = data_path+"HTML_Monitor/figures/"
 
 # specify length of time interval to show
-config['time_interval'] = 21 # days
+config['time_interval'] = 14 # days
 
 # define time interval
 config['tend'] = UTCDateTime().now()
@@ -406,7 +401,7 @@ def __makeplot():
                        color=config['colors'][_s], lw=1, label=f"PS{_s}")
     except:
         pass
-z
+
     try:
         ax[3].plot(rdn.times_utc - config['tbeg'], rdn['Radon ST avg (Bq/m3)'], color="k", label=f"RDN")
     except:

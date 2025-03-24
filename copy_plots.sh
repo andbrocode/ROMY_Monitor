@@ -15,7 +15,7 @@ for r in U V W; do
 
 done;
 
-# copy sagnac spectra
+# copy sagnac spectra plots
 path_to_images="/import/freenas-ffb-01-data/romy_plots/"
 for r in Z U V; do
     # extend path
@@ -24,6 +24,17 @@ for r in Z U V; do
     filename=$(ls -tp ${path_to_spectra} | grep -v /$ | head -1)
     # copy images
     cp ${path_to_spectra}${filename} ${target}"html_sagnacspectra_R${r}.png"
+done
+
+# copy sagnac signal plots
+path_to_images="/import/freenas-ffb-01-data/romy_plots/"
+for r in Z U V; do
+    # extend path
+    path_to_spectra="${path_to_images}${year}/R${r}/signal/"
+    # find last modifed file
+    filename=$(ls -tp ${path_to_spectra} | grep -v /$ | head -1)
+    # copy images
+    cp ${path_to_spectra}${filename} ${target}"html_sagnacsignal_R${r}.png"
 done
 
 # EOF

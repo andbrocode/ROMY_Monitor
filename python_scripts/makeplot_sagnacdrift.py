@@ -7,7 +7,7 @@
 
 # ## Imports
 
-# In[1]:
+# In[3]:
 
 
 import os
@@ -20,7 +20,7 @@ from pandas import DataFrame, read_pickle, date_range, concat, read_csv
 from obspy import UTCDateTime, read, Trace, Stream, read_inventory
 
 
-# In[2]:
+# In[4]:
 
 
 from functions.load_sagnac_beat_data import __load_sagnac_beat_data
@@ -36,7 +36,7 @@ from functions.find_max_min import __find_max_min
 from functions.find_labels import __find_lables
 
 
-# In[3]:
+# In[5]:
 
 
 if os.uname().nodename == 'lighthouse':
@@ -49,6 +49,12 @@ elif os.uname().nodename == 'kilauea':
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/bay200/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -58,7 +64,7 @@ elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
 
 # ## Configurations
 
-# In[4]:
+# In[6]:
 
 
 config = {}
@@ -81,12 +87,12 @@ config['path_to_sds'] = archive_path+"romy_archive/"
 config['path_to_autodata'] = archive_path+f"romy_autodata/"
 
 # path to figure output
-config['path_to_figs'] = data_path+f"HTML_Monitor/figures/"
+config['path_to_figs'] = archive_path+f"romy_html_monitor/figures/"
 
 
 # ### Load beat data
 
-# In[5]:
+# In[7]:
 
 
 try:

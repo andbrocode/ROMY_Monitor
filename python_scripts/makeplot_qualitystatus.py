@@ -37,6 +37,12 @@ elif os.uname().nodename == 'kilauea':
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -60,7 +66,7 @@ config['tbeg'] = obs.UTCDateTime(f"{config['tend'].year}-01-01")
 config['date_before'] = obs.UTCDateTime((config['tend'] - 2*86400).date)
 
 # path to figure output
-config['path_to_figs'] = data_path+f"HTML_Monitor/figures/"
+config['path_to_figs'] = archive_path+f"romy_html_monitor/figures/"
 
 # path to quality data archive
 config['path_to_data'] = archive_path+f"temp_archive/"

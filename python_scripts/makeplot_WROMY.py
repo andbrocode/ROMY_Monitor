@@ -17,7 +17,12 @@ from obspy import UTCDateTime, Stream
 
 # In[2]:
 
+
 # sys.path.append('..')
+
+
+# In[3]:
+
 
 from functions.load_lxx import __load_lxx
 from functions.get_lxx_intervals import __get_lxx_intervals
@@ -26,6 +31,7 @@ from functions.load_furt_stream import __load_furt_stream
 from functions.read_wromy_data import __read_wromy_data
 from functions.find_labels import __find_lables
 from functions.smoothing import __smooth
+
 
 # In[4]:
 
@@ -40,6 +46,12 @@ elif os.uname().nodename == 'kilauea':
     data_path = '/import/kilauea-data/'
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/bay200/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -92,7 +104,7 @@ config = {}
 config['path_to_sds'] = archive_path+"romy_archive/"
 
 # path to figure output
-config['path_to_figs'] = data_path+"HTML_Monitor/figures/"
+config['path_to_figs'] = archive_path+f"romy_html_monitor/figures/"
 
 # specify length of time interval to show
 config['time_interval'] = 14 # days
@@ -100,6 +112,7 @@ config['time_interval'] = 14 # days
 # define time interval
 config['tend'] = UTCDateTime().now()
 config['tbeg'] = config['tend'] - config['time_interval'] * 86400
+
 
 # specify wromy stations to use
 config['wromy_stations'] = [1, 4, 5, 6, 7, 8, 9]
@@ -326,7 +339,7 @@ except Exception as e:
 
 # ### Plotting
 
-# In[35]:
+# In[17]:
 
 
 def __makeplot():
@@ -476,26 +489,20 @@ def __makeplot():
     return fig
 
 
-# In[36]:
+# In[18]:
 
 
 fig = __makeplot();
 
 
-# In[37]:
+# In[19]:
 
 
 fig.savefig(config['path_to_figs']+f"html_wromy.png", format="png", dpi=150, bbox_inches='tight')
 
 
-# In[38]:
+# In[20]:
 
 
 del fig
-
-
-# In[ ]:
-
-
-
 

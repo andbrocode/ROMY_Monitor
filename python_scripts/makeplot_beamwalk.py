@@ -39,6 +39,12 @@ elif os.uname().nodename == 'kilauea':
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -64,7 +70,7 @@ config['path_to_data'] = data_path+f"ids/"
 config['path_to_images'] = data_path+"ids/"
 
 # path to figure output
-config['path_to_figs'] = data_path+f"HTML_Monitor/figures/"
+config['path_to_figs'] = darchive_path+f"romy_html_monitor/figures/"
 
 # conversion from pixel to mm
 config['conversion'] = {#"00":1.67e-3,
@@ -278,7 +284,7 @@ lxx_t1, lxx_t2 = __get_lxx_intervals(lxx.datetime)
 
 # ### Plotting
 
-# In[21]:
+# In[15]:
 
 
 def __makeplot():
@@ -424,7 +430,7 @@ def __makeplot():
     return fig
 
 
-# In[22]:
+# In[16]:
 
 
 fig = __makeplot();

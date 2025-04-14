@@ -51,11 +51,11 @@ def main():
     dt = datetime.utcnow()
 
     # initiate scope object
-#    try:
-    scope = DS1054Z(DS1054Z_IP)
+    try:
+        scope = DS1054Z(DS1054Z_IP)
         # scope = DS1054Z(f'TCPIP::{DS1054Z_IP}::INSTR')
-#    except:
-#        return
+    except:
+        return
 
     try:
         #stop scope

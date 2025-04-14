@@ -48,6 +48,12 @@ elif os.uname().nodename == 'kilauea':
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -89,7 +95,7 @@ config['nominal_sagnac'] = config['ring_sagnac'][config['ring']]
 config['path_to_data'] = data_path+"sagnac_frequency/data/backscatter/"
 
 # path to figure output
-config['path_to_figs'] = data_path+f"HTML_Monitor/figures/"
+config['path_to_figs'] = archive_path+f"romy_html_monitor/figures/"
 
 
 # ### Load Archived Backscatter Files
@@ -107,12 +113,12 @@ bs['time_sec'] = bs.time2 - bs.time1 + (bs.time1 - bs.time1.loc[0])
 
 # compute backscatter corrected signal
 bs['fj_bs'] = __backscatter_correction(bs.f1_ac / bs.f1_dc,
-                                         bs.f2_ac / bs.f2_dc,
-                                         np.unwrap(bs.f1_phw) - np.unwrap(bs.f2_phw),
-                                         bs.fj_fs,
-                                         np.nanmedian(bs.fj_fs),
-                                         cm_filter_factor=1.033,
-                                         )
+                                       bs.f2_ac / bs.f2_dc,
+                                       np.unwrap(bs.f1_phw) - np.unwrap(bs.f2_phw),
+                                       bs.fj_fs,
+                                       np.nanmedian(bs.fj_fs),
+                                       cm_filter_factor=1.033,
+                                      )
 
 
 # ## Processing

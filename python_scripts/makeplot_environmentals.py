@@ -62,6 +62,12 @@ elif os.uname().nodename == 'kilauea':
     archive_path = '/import/freenas-ffb-01-data/'
     bay_path = '/import/ontap-ffb-bay200/'
     lamont_path = '/lamont/'
+elif os.uname().nodename == 'teide':
+    root_path = '/home/sysopromy/'
+    data_path = '/freenas-ffb-01/'
+    archive_path = '/freenas-ffb-01/'
+    bay_path = '/bay200/'
+    lamont_path = '/lamont/'
 elif os.uname().nodename in ['lin-ffb-01', 'ambrym', 'hochfelln']:
     root_path = '/home/brotzer/'
     data_path = '/import/kilauea-data/'
@@ -114,7 +120,7 @@ config['path_to_data'] = data_path+"sagnac_frequency/data/backscatter/"
 config['path_to_out_data'] = data_path+"sagnac_frequency/data/"
 
 # path to figure output
-config['path_to_figs'] = data_path+f"HTML_Monitor/figures/"
+config['path_to_figs'] = archive_path+f"romy_html_monitor/figures/"
 
 # specify wromy stations to use
 config['wromy_stations'] = [1, 4, 5, 6, 7, 8, 9]
